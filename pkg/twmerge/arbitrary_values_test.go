@@ -68,18 +68,16 @@ func TestArbitraryValueConflicts(t *testing.T) {
 			classes: "min-h-[0.5px] min-h-[0]",
 			want:    "min-h-[0]",
 		},
-		// TODO: Implementation gap - text-size arbitrary value vs text-color labeled arbitrary value
-		// should not conflict. The Go implementation currently treats them as the same group.
-		// {
-		// 	name:    "text size vs text color with labels",
-		// 	classes: "text-[0.5px] text-[color:0]",
-		// 	want:    "text-[0.5px] text-[color:0]",
-		// },
-		// {
-		// 	name:    "text size vs text variable",
-		// 	classes: "text-[0.5px] text-(--my-0)",
-		// 	want:    "text-[0.5px] text-(--my-0)",
-		// },
+		{
+			name:    "text size vs text color with labels",
+			classes: "text-[0.5px] text-[color:0]",
+			want:    "text-[0.5px] text-[color:0]",
+		},
+		{
+			name:    "text size vs text variable",
+			classes: "text-[0.5px] text-(--my-0)",
+			want:    "text-[0.5px] text-(--my-0)",
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -225,20 +223,16 @@ func TestArbitraryValueBgSize(t *testing.T) {
 		classes string
 		want    string
 	}{
-		// TODO: Implementation gap - bg-size labeled arbitrary values (percentage, size, length)
-		// not properly distinguished from bg-cover group.
-		// {
-		// 	name:    "bg-cover vs labeled arbitrary bg values",
-		// 	classes: "bg-cover bg-[percentage:30%] bg-[size:200px_100px] bg-[length:200px_100px]",
-		// 	want:    "bg-[percentage:30%] bg-[length:200px_100px]",
-		// },
-		// TODO: Implementation gap - bg-image arbitrary types (url, image, url:, linear-gradient)
-		// not properly chained to bg-linear-to-r group.
-		// {
-		// 	name:    "bg-none and various bg image types",
-		// 	classes: "bg-none bg-[url(.)] bg-[image:.] bg-[url:.] bg-[linear-gradient(.)] bg-linear-to-r",
-		// 	want:    "bg-linear-to-r",
-		// },
+		{
+			name:    "bg-cover vs labeled arbitrary bg values",
+			classes: "bg-cover bg-[percentage:30%] bg-[size:200px_100px] bg-[length:200px_100px]",
+			want:    "bg-[percentage:30%] bg-[length:200px_100px]",
+		},
+		{
+			name:    "bg-none and various bg image types",
+			classes: "bg-none bg-[url(.)] bg-[image:.] bg-[url:.] bg-[linear-gradient(.)] bg-linear-to-r",
+			want:    "bg-linear-to-r",
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -301,13 +295,11 @@ func TestArbitraryVariableValues(t *testing.T) {
 		classes string
 		want    string
 	}{
-		// TODO: Implementation gap - bg-color variable and bg-position variable
-		// should be distinguished from each other. Go impl conflates bg groups.
-		// {
-		// 	name:    "bg color vs position with variables",
-		// 	classes: "bg-red bg-(--other-red) bg-bottom bg-(position:-my-pos)",
-		// 	want:    "bg-(--other-red) bg-(position:-my-pos)",
-		// },
+		{
+			name:    "bg color vs position with variables",
+			classes: "bg-red bg-(--other-red) bg-bottom bg-(position:-my-pos)",
+			want:    "bg-(--other-red) bg-(position:-my-pos)",
+		},
 		{
 			name:    "shadow with various variable types",
 			classes: "shadow-xs shadow-(shadow:--something) shadow-red shadow-(--some-other-shadow) shadow-(color:--some-color)",

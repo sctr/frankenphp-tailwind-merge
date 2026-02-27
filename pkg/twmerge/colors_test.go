@@ -18,13 +18,11 @@ func TestColorConflicts(t *testing.T) {
 			classes: "hover:bg-grey-5 hover:bg-hotpink",
 			want:    "hover:bg-hotpink",
 		},
-		// TODO: Implementation gap - stroke-[hsl(350_80%_0%)] (stroke-color) and
-		// stroke-[10px] (stroke-width) should not conflict.
-		// {
-		// 	name:    "stroke color vs stroke width don't conflict",
-		// 	classes: "stroke-[hsl(350_80%_0%)] stroke-[10px]",
-		// 	want:    "stroke-[hsl(350_80%_0%)] stroke-[10px]",
-		// },
+		{
+			name:    "stroke color vs stroke width don't conflict",
+			classes: "stroke-[hsl(350_80%_0%)] stroke-[10px]",
+			want:    "stroke-[hsl(350_80%_0%)] stroke-[10px]",
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

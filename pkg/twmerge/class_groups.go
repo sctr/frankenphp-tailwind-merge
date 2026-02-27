@@ -140,15 +140,29 @@ func CreateClassMap(config *Config) *ClassPartNode {
 	classMap := newClassPartNode()
 
 	// Sort class group keys to ensure deterministic validator ordering on
-	// shared trie nodes. Shorter keys first ensures base groups (e.g. "shadow")
-	// register their specific validators before derived groups (e.g.
-	// "shadow-color") register catch-all validators. This matches the JS
-	// reference implementation which relies on object insertion order.
+	// shared trie nodes. The JS reference relies on object insertion order
+	// where groups with specific validators (e.g. "stroke-w" with isNumber,
+	// isArbitraryLength) are defined before groups with catch-all validators
+	// (e.g. "stroke" with scaleColor/isAny). We replicate this by processing
+	// groups that contain a "color" theme getter (which resolves to isAny)
+	// after all other groups. Within each tier, shorter keys come first.
 	keys := make([]string, 0, len(config.ClassGroups))
 	for k := range config.ClassGroups {
 		keys = append(keys, k)
 	}
+
+	// Identify class groups that include a color theme getter (catch-all).
+	hasColorTheme := make(map[string]bool, len(keys))
+	for _, k := range keys {
+		hasColorTheme[k] = classGroupHasColorTheme(config.ClassGroups[k])
+	}
+
 	sort.Slice(keys, func(i, j int) bool {
+		iColor := hasColorTheme[keys[i]]
+		jColor := hasColorTheme[keys[j]]
+		if iColor != jColor {
+			return !iColor // non-color groups first
+		}
 		if len(keys[i]) != len(keys[j]) {
 			return len(keys[i]) < len(keys[j])
 		}
@@ -160,6 +174,28 @@ func CreateClassMap(config *Config) *ClassPartNode {
 	}
 
 	return classMap
+}
+
+// classGroupHasColorTheme returns true if the class group definitions include
+// a ThemeGetter with Key "color", which resolves to the IsAny catch-all
+// validator. Such groups must be processed after groups with specific validators
+// to avoid the catch-all matching values intended for other groups.
+func classGroupHasColorTheme(defs []ClassDefinition) bool {
+	for _, def := range defs {
+		switch v := def.(type) {
+		case ThemeGetter:
+			if v.Key == "color" {
+				return true
+			}
+		case map[string][]ClassDefinition:
+			for _, subDefs := range v {
+				if classGroupHasColorTheme(subDefs) {
+					return true
+				}
+			}
+		}
+	}
+	return false
 }
 
 func processClassesRecursively(classGroup []ClassDefinition, node *ClassPartNode, classGroupID string, theme map[string][]ClassDefinition) {

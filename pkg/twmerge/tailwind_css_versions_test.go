@@ -8,13 +8,11 @@ func TestTailwindCSSv33Features(t *testing.T) {
 		classes []string
 		want    string
 	}{
-		// TODO: Implementation gap - text-red (text-color) and text-lg/8 (font-size)
-		// should not conflict. The Go implementation currently treats them as same group.
-		// {
-		// 	name:    "text color and postfix modifier",
-		// 	classes: []string{"text-red text-lg/7 text-lg/8"},
-		// 	want:    "text-red text-lg/8",
-		// },
+		{
+			name:    "text color and postfix modifier",
+			classes: []string{"text-red text-lg/7 text-lg/8"},
+			want:    "text-red text-lg/8",
+		},
 		{
 			name:    "logical properties",
 			classes: []string{
@@ -42,13 +40,11 @@ func TestTailwindCSSv33Features(t *testing.T) {
 			classes: []string{"from-0% from-10% from-[12.5%] via-0% via-10% via-[12.5%] to-0% to-10% to-[12.5%]"},
 			want:    "from-[12.5%] via-[12.5%] to-[12.5%]",
 		},
-		// TODO: Implementation gap - from-0% (gradient-from-position) and from-red (gradient-from-color)
-		// should not conflict. The Go implementation currently treats them as same group.
-		// {
-		// 	name:    "gradient from-position and from-color don't conflict",
-		// 	classes: []string{"from-0% from-red"},
-		// 	want:    "from-0% from-red",
-		// },
+		{
+			name:    "gradient from-position and from-color don't conflict",
+			classes: []string{"from-0% from-red"},
+			want:    "from-0% from-red",
+		},
 		{
 			name:    "list-image",
 			classes: []string{"list-image-none list-image-[url(./my-image.png)] list-image-[var(--value)]"},
@@ -196,13 +192,11 @@ func TestTailwindCSSv40Features(t *testing.T) {
 			classes: "bg-linear-to-r bg-radial-[something] bg-conic-10",
 			want:    "bg-conic-10",
 		},
-		// TODO: Implementation gap - inset-ring width (inset-ring, inset-ring-3) should be separate
-		// from inset-ring color (inset-ring-blue). The Go impl conflates them.
-		// {
-		// 	name:    "inset-ring",
-		// 	classes: "ring-4 ring-orange inset-ring inset-ring-3 inset-ring-blue",
-		// 	want:    "ring-4 ring-orange inset-ring-3 inset-ring-blue",
-		// },
+		{
+			name:    "inset-ring",
+			classes: "ring-4 ring-orange inset-ring inset-ring-3 inset-ring-blue",
+			want:    "ring-4 ring-orange inset-ring-3 inset-ring-blue",
+		},
 		{
 			name:    "field-sizing",
 			classes: "field-sizing-content field-sizing-fixed",
@@ -228,12 +222,11 @@ func TestTailwindCSSv40Features(t *testing.T) {
 			classes: "via-red-500 via-(--mobile-header-gradient)",
 			want:    "via-(--mobile-header-gradient)",
 		},
-		// TODO: Implementation gap - via-color and via-(length:...) variable should not conflict.
-		// {
-		// 	name:    "via color vs via length variable don't conflict",
-		// 	classes: "via-red-500 via-(length:--mobile-header-gradient)",
-		// 	want:    "via-red-500 via-(length:--mobile-header-gradient)",
-		// },
+		{
+			name:    "via color vs via length variable don't conflict",
+			classes: "via-red-500 via-(length:--mobile-header-gradient)",
+			want:    "via-red-500 via-(length:--mobile-header-gradient)",
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -275,12 +268,11 @@ func TestTailwindCSSv41Features(t *testing.T) {
 			classes: "wrap-break-word wrap-normal wrap-anywhere",
 			want:    "wrap-anywhere",
 		},
-		// TODO: Implementation gap - text-shadow class group not recognized.
-		// {
-		// 	name:    "text-shadow",
-		// 	classes: "text-shadow-none text-shadow-2xl",
-		// 	want:    "text-shadow-2xl",
-		// },
+		{
+			name:    "text-shadow",
+			classes: "text-shadow-none text-shadow-2xl",
+			want:    "text-shadow-2xl",
+		},
 		{
 			name:    "mask composite",
 			classes: "mask-add mask-subtract",
