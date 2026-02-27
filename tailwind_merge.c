@@ -39,12 +39,12 @@ ZEND_FUNCTION(tailwind_merge) {
     }
     ZEND_HASH_FOREACH_END();
 
-    struct go_tailwind_merge_return ret = go_tailwind_merge(strings, count);
+    char *ret = go_tailwind_merge(strings, count);
     efree(strings);
 
-    if (ret.r0 != NULL) {
-        ZVAL_STRING(return_value, ret.r0);
-        free(ret.r0);
+    if (ret != NULL) {
+        ZVAL_STRING(return_value, ret);
+        free(ret);
     } else {
         RETURN_EMPTY_STRING();
     }
