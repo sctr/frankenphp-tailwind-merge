@@ -1,0 +1,14 @@
+{
+    auto_https off
+    admin off
+    http_port 8080
+
+    frankenphp {
+        worker ./index.php
+    }
+}
+
+:8080 {
+    root * .
+    php
+}
