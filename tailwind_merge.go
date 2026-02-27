@@ -14,7 +14,7 @@ func init() {
 }
 
 //export go_tailwind_merge
-func go_tailwind_merge(strings **C.zend_string, count C.int) (result *C.char) {
+func go_tailwind_merge(strings **C.zend_string, count C.int) *C.char {
 	n := int(count)
 	if n == 0 {
 		return nil
