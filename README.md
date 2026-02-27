@@ -1,30 +1,46 @@
-# tailwind-merge for PHP
+# FrankenPHP Extension for Tailwind Merge
 
-Utility function to efficiently merge Tailwind CSS classes in PHP without style conflicts.
+A high-performance [PHP](https://php.net) utility for merging [Tailwind CSS](https://tailwindcss.com) classes without style conflicts, designed to work with [FrankenPHP](https://frankenphp.dev).
+It leverages Go to perform intelligent class resolution based on Tailwind v4's utility hierarchy, ported from [tailwind_merge](https://github.com/gjtorikian/tailwind_merge) (Ruby) and inspired by [tailwind-merge](https://github.com/dcastil/tailwind-merge) (JS).
 
-A [FrankenPHP](https://frankenphp.dev/) extension written in Go. Port of the Tailwind v4 class resolution logic from [tailwind_merge](https://github.com/gjtorikian/tailwind_merge) (Ruby), inspired by [tailwind-merge](https://github.com/dcastil/tailwind-merge) (JS).
-
-- Supports Tailwind v4
-- Works with FrankenPHP worker mode
-- In-memory LRU cache powered by Go — shared across requests
-- Zero PHP dependencies
+This extension provides a single `tailwind_merge()` function that can be shared across all requests and worker script instances,
+backed by an in-memory LRU cache powered by Go — ensuring efficient resource usage and high performance with zero PHP dependencies.
 
 ```php
 tailwind_merge(['px-2 py-1 bg-red hover:bg-dark-red', 'p-3 bg-[#B91C1C]']);
 // → 'hover:bg-dark-red p-3 bg-[#B91C1C]'
 ```
 
-## Get started
+## Installation
 
-- [What is it for?](#what-is-it-for)
-- [Installation](#installation)
-- [Usage](#usage)
-- [API reference](#api-reference)
-- [How it works](#how-it-works)
+First, [install FrankenPHP](https://frankenphp.dev/docs/) and its dependencies including a ZTS (Zend Thread Safety) build of libphp and [xcaddy](https://github.com/caddyserver/xcaddy).
 
-## What is it for?
+Then, compile FrankenPHP with the extension:
 
-If you use Tailwind with a component-based templating approach (Blade, Twig, Livewire, etc.), you probably run into class conflicts when composing components. When two conflicting classes exist in the same string, CSS specificity — not source order — determines which one applies. This makes overriding styles unreliable.
+```console
+CGO_ENABLED=1 \
+XCADDY_GO_BUILD_FLAGS="-ldflags='-w -s'" \
+CGO_CFLAGS=$(php-config --includes) \
+CGO_LDFLAGS="$(php-config --ldflags) $(php-config --libs)" \
+xcaddy build \
+    --output frankenphp \
+    --with github.com/dunglas/frankenphp/caddy \
+    --with github.com/sctr/frankenphp-tailwind-merge
+    # Add extra Caddy modules and FrankenPHP extensions here
+```
+
+That's it! Your custom FrankenPHP build now contains the `tailwind_merge` extension.
+
+Verify it's loaded:
+
+```php
+var_dump(extension_loaded('tailwind_merge'));
+// bool(true)
+```
+
+## Usage
+
+If you use Tailwind with a component-based templating approach (Blade, Twig, Livewire, etc.), you'll run into class conflicts when composing components. When two conflicting classes exist in the same string, CSS specificity — not source order — determines which one applies, making overrides unreliable.
 
 `tailwind_merge()` solves this by intelligently resolving conflicts so the last class always wins:
 
@@ -36,9 +52,25 @@ If you use Tailwind with a component-based templating approach (Blade, Twig, Liv
 // With tailwind_merge — p-3 overrides px-2 and py-1
 tailwind_merge(['px-2 py-1', 'p-3']);
 // → "p-3"
+
+// Last conflicting class wins
+tailwind_merge(['text-red-500', 'text-blue-500']);
+// → "text-blue-500"
+
+// Modifiers are scoped independently
+tailwind_merge(['hover:bg-red-500', 'hover:bg-blue-500', 'bg-green-500']);
+// → "hover:bg-blue-500 bg-green-500"
+
+// Arbitrary values work too
+tailwind_merge(['bg-red-500', 'bg-[#1da1f2]']);
+// → "bg-[#1da1f2]"
+
+// Non-Tailwind classes are always preserved
+tailwind_merge(['my-custom-class px-2', 'px-4']);
+// → "my-custom-class px-4"
 ```
 
-The primary use case is component override patterns:
+The primary use case is component override patterns. Here is an example using a plain PHP function:
 
 ```php
 function button(string $class = ''): string
@@ -53,69 +85,7 @@ button('bg-red-600 py-3');
 // → "inline-flex items-center px-4 py-3 bg-red-600 text-white font-medium rounded-md"
 ```
 
-## Installation
-
-### Building with FrankenPHP
-
-Add the module when building FrankenPHP:
-
-```bash
-CGO_ENABLED=1 \
-XCADDY_GO_BUILD_FLAGS="-ldflags='-w -s'" \
-CGO_CFLAGS=$(php-config --includes) \
-CGO_LDFLAGS="$(php-config --ldflags) $(php-config --libs)" \
-xcaddy build \
-    --output frankenphp \
-    --with github.com/sctr/frankenphp-tailwind-merge
-```
-
-### Requirements
-
-- [FrankenPHP](https://frankenphp.dev/) with extension support
-- Go 1.22+
-- PHP 8.2+
-
-### Verify
-
-```php
-var_dump(extension_loaded('tailwind_merge'));
-// bool(true)
-```
-
-## Usage
-
-### Basic merging
-
-```php
-tailwind_merge(['px-2 py-1 bg-red-500', 'p-3 bg-blue-500']);
-// → "p-3 bg-blue-500"
-```
-
-### Conflict resolution
-
-```php
-// Shorthand overrides longhand
-tailwind_merge(['px-2 py-1', 'p-3']);
-// → "p-3"
-
-// Last conflicting class wins
-tailwind_merge(['text-red-500', 'text-blue-500']);
-// → "text-blue-500"
-
-// Modifiers are scoped independently
-tailwind_merge(['hover:bg-red-500', 'hover:bg-blue-500', 'bg-green-500']);
-// → "hover:bg-blue-500 bg-green-500"
-
-// Arbitrary values
-tailwind_merge(['bg-red-500', 'bg-[#1da1f2]']);
-// → "bg-[#1da1f2]"
-
-// Non-Tailwind classes are preserved
-tailwind_merge(['my-custom-class px-2', 'px-4']);
-// → "my-custom-class px-4"
-```
-
-### Laravel Blade
+And here is an equivalent Laravel Blade component:
 
 ```php
 // resources/views/components/button.blade.php
@@ -129,7 +99,7 @@ tailwind_merge(['my-custom-class px-2', 'px-4']);
 
 ```html
 <x-button class="bg-red-600 py-3">Delete</x-button>
-<!-- → "inline-flex items-center px-4 py-3 bg-red-600 text-white rounded-md" -->
+<!-- renders with: "inline-flex items-center px-4 py-3 bg-red-600 text-white rounded-md" -->
 ```
 
 ### Features
@@ -144,36 +114,20 @@ tailwind_merge(['my-custom-class px-2', 'px-4']);
 | Postfix modifiers | `['text-lg/7', 'text-lg/8']` | `text-lg/8` |
 | Non-TW classes preserved | `['custom px-2', 'px-4']` | `custom px-4` |
 
-## API reference
-
-### `tailwind_merge(array $classes): string`
-
-Merges an array of Tailwind CSS class strings, resolving conflicts by keeping the last conflicting class.
-
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `$classes` | `array<string>` | Array of class strings to merge |
-
-**Returns:** `string` — The merged class string with conflicts resolved.
-
-## How it works
+### How it works
 
 1. **Cache lookup** — A Go-powered LRU cache checks if this exact input was seen before. On hit, returns instantly.
 2. **Parse** — Each class string is split into individual classes, then parsed into groups, modifiers, and values.
-3. **Resolve** — Conflicting classes are identified using Tailwind's class group hierarchy. Last conflicting class wins.
+3. **Resolve** — Conflicting classes are identified using Tailwind's class group hierarchy. The last conflicting class wins.
 4. **Cache & return** — The result is stored in the LRU cache and returned to PHP.
 
-The cache lives in Go memory and persists across PHP requests in FrankenPHP worker mode. This means:
+The cache lives in Go memory and persists across PHP requests in FrankenPHP worker mode. All PHP workers share the same cache with no serialization overhead and bounded memory via LRU eviction.
 
-- **No serialization overhead** — No PHP serialize/unserialize, no Redis, no filesystem
-- **Shared across requests** — All PHP workers share the same cache
-- **Bounded memory** — LRU eviction keeps memory usage predictable
-
-## Acknowledgments
+## Credits
 
 - [tailwind-merge](https://github.com/dcastil/tailwind-merge) (JS) by Dany Castillo — the original implementation and API inspiration
 - [tailwind_merge](https://github.com/gjtorikian/tailwind_merge) (Ruby) by Garen Torikian — Tailwind v4 class resolution logic this port is based on
-- [FrankenPHP](https://frankenphp.dev/) by Kevin Dunglas — Go-powered PHP extensions
+- [FrankenPHP](https://frankenphp.dev/) by Kévin Dunglas — Go-powered PHP extensions
 
 ## License
 
