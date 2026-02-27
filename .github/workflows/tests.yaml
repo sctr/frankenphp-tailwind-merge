@@ -49,7 +49,7 @@ jobs:
           CGO_ENABLED=1 \
           CGO_CFLAGS="$(php-config --includes)" \
           CGO_LDFLAGS="$(php-config --ldflags) $(php-config --libs)" \
-          GOFLAGS="-tags=nobadger,nomysql,nopgx,nowatcher,nobrotli" \
+          XCADDY_GO_BUILD_FLAGS="-tags=nobadger,nomysql,nopgx,nowatcher,nobrotli" \
           xcaddy build \
             --output frankenphp \
             --with github.com/sctr/frankenphp-tailwind-merge=.
