@@ -70,7 +70,7 @@ jobs:
       - name: Run integration test
         run: |
           cd testdata
-          ../frankenphp php index.php | tee output.txt
+          ../frankenphp php-cli index.php | tee output.txt
           grep -q "extension_loaded: true" output.txt
           grep -q "shorthand: p-3" output.txt
           grep -q 'hero: hover:bg-dark-red p-3 bg-\[#B91C1C\]' output.txt
