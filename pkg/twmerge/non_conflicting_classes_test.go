@@ -18,13 +18,11 @@ func TestNonConflictingClasses(t *testing.T) {
 			classes: "border-t border-white",
 			want:    "border-t border-white",
 		},
-		// TODO: Implementation gap - text-3.5xl (font-size) and text-black (text-color)
-		// should not conflict. The Go implementation currently merges them.
-		// {
-		// 	name:    "text size and text color don't conflict",
-		// 	classes: "text-3.5xl text-black",
-		// 	want:    "text-3.5xl text-black",
-		// },
+		{
+			name:    "text size and text color don't conflict",
+			classes: "text-3.5xl text-black",
+			want:    "text-3.5xl text-black",
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

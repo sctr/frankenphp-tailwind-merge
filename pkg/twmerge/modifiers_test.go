@@ -136,13 +136,11 @@ func TestMergeWithPostfixModifiers(t *testing.T) {
 			classes: "text-lg/none leading-9",
 			want:    "text-lg/none leading-9",
 		},
-		// TODO: Implementation gap - text-lg/none postfix modifier should override leading-9
-		// via cross-group conflict (leading -> font-size with leading).
-		// {
-		// 	name:    "leading overridden by postfix",
-		// 	classes: "leading-9 text-lg/none",
-		// 	want:    "text-lg/none",
-		// },
+		{
+			name:    "leading overridden by postfix",
+			classes: "leading-9 text-lg/none",
+			want:    "text-lg/none",
+		},
 		{
 			name:    "w-full overridden by w-1/2 (fraction not postfix)",
 			classes: "w-full w-1/2",
