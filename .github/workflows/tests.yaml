@@ -37,16 +37,24 @@ jobs:
         with:
           go-version: '1.26'
 
-      - name: Install PHP 8.4 (thread-safe, debug)
+      - name: Install PHP 8.4 with embed SAPI
         run: |
           sudo add-apt-repository ppa:ondrej/php -y
           sudo apt-get update
           sudo apt-get install -y php8.4-dev php8.4-cli libphp8.4-embed libsodium-dev libargon2-dev
-          # The ondrej PPA installs the embed library with a versioned name
-          # (e.g. libphp8.4.so) but FrankenPHP links with -lphp expecting
-          # libphp.so. Create a symlink so the linker can find it.
-          PHP_LIB=$(find /usr/lib -name 'libphp*.so' -print -quit)
-          sudo ln -sf "$PHP_LIB" "$(dirname "$PHP_LIB")/libphp.so"
+          # FrankenPHP links with -lphp but the ondrej PPA installs the
+          # embed library with a versioned name. Use dpkg to find the
+          # actual .so, then create a libphp.so symlink the linker can find.
+          dpkg -L libphp8.4-embed
+          PHP_LIB=$(dpkg -L libphp8.4-embed | grep -E '\.so' | head -1)
+          if [ -z "$PHP_LIB" ]; then
+            echo "No .so in package manifest; searching filesystem..."
+            PHP_LIB=$(find /usr -name 'libphp*' \( -name '*.so' -o -name '*.so.*' \) ! -name 'libphp.so' 2>/dev/null | head -1)
+          fi
+          [ -n "$PHP_LIB" ] || { echo "FATAL: PHP embed library not found"; exit 1; }
+          echo "PHP embed library: $PHP_LIB"
+          sudo ln -sf "$PHP_LIB" /usr/lib/x86_64-linux-gnu/libphp.so
+          sudo ldconfig
 
       - name: Build FrankenPHP with tailwind_merge
         run: |
