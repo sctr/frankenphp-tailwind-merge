@@ -14,8 +14,9 @@ func MergeClassList(classList string, utils *ConfigUtils) string {
 		return ""
 	}
 
-	classGroupsInConflict := make([]string, 0, len(classNames))
-	result := ""
+	classGroupsInConflict := make(map[string]struct{})
+	finalClasses := make([]string, len(classNames))
+	cursor := len(classNames)
 
 	for i := len(classNames) - 1; i >= 0; i-- {
 		originalClassName := classNames[i]
@@ -23,7 +24,8 @@ func MergeClassList(classList string, utils *ConfigUtils) string {
 		parsed := utils.ParseClassName(originalClassName)
 
 		if parsed.IsExternal {
-			result = prepend(originalClassName, result)
+			cursor--
+			finalClasses[cursor] = originalClassName
 			continue
 		}
 
@@ -38,21 +40,20 @@ func MergeClassList(classList string, utils *ConfigUtils) string {
 
 		if classGroupID == "" {
 			if !hasPostfixModifier {
-				// Not a Tailwind class
-				result = prepend(originalClassName, result)
+				cursor--
+				finalClasses[cursor] = originalClassName
 				continue
 			}
 
 			classGroupID = utils.GetClassGroupID(parsed.BaseClassName)
 			if classGroupID == "" {
-				// Not a Tailwind class
-				result = prepend(originalClassName, result)
+				cursor--
+				finalClasses[cursor] = originalClassName
 				continue
 			}
 			hasPostfixModifier = false
 		}
 
-		// Build variant modifier string
 		var variantModifier string
 		if len(parsed.Modifiers) == 0 {
 			variantModifier = ""
@@ -70,37 +71,20 @@ func MergeClassList(classList string, utils *ConfigUtils) string {
 
 		classID := modifierID + classGroupID
 
-		if contains(classGroupsInConflict, classID) {
-			// Tailwind class omitted due to conflict
+		if _, exists := classGroupsInConflict[classID]; exists {
 			continue
 		}
 
-		classGroupsInConflict = append(classGroupsInConflict, classID)
+		classGroupsInConflict[classID] = struct{}{}
 
 		conflictGroups := utils.GetConflictingClassGroupIDs(classGroupID, hasPostfixModifier)
 		for _, group := range conflictGroups {
-			classGroupsInConflict = append(classGroupsInConflict, modifierID+group)
+			classGroupsInConflict[modifierID+group] = struct{}{}
 		}
 
-		// Tailwind class not in conflict
-		result = prepend(originalClassName, result)
+		cursor--
+		finalClasses[cursor] = originalClassName
 	}
 
-	return result
-}
-
-func prepend(className, result string) string {
-	if result == "" {
-		return className
-	}
-	return className + " " + result
-}
-
-func contains(slice []string, item string) bool {
-	for _, s := range slice {
-		if s == item {
-			return true
-		}
-	}
-	return false
+	return strings.Join(finalClasses[cursor:], " ")
 }

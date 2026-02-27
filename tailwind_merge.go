@@ -21,13 +21,9 @@ func go_tailwind_merge(strings **C.zend_string, count C.int) (result *C.char) {
 	}
 
 	classes := make([]string, n)
-	ptr := uintptr(unsafe.Pointer(strings))
-	ptrSize := unsafe.Sizeof(strings)
-
+	cStrings := unsafe.Slice(strings, n)
 	for i := 0; i < n; i++ {
-		zs := *(**C.zend_string)(unsafe.Pointer(ptr))
-		classes[i] = zendStringToGoString(zs)
-		ptr += ptrSize
+		classes[i] = zendStringToGoString(cStrings[i])
 	}
 
 	merged := twmerge.TwMerge(classes...)
