@@ -1,6 +1,9 @@
 package twmerge
 
-import "strings"
+import (
+	"sort"
+	"strings"
+)
 
 const (
 	classPartSeparator     = "-"
@@ -136,8 +139,24 @@ func getGroupIDForArbitraryProperty(className string) string {
 func CreateClassMap(config *Config) *ClassPartNode {
 	classMap := newClassPartNode()
 
-	for classGroupID, group := range config.ClassGroups {
-		processClassesRecursively(group, classMap, classGroupID, config.Theme)
+	// Sort class group keys to ensure deterministic validator ordering on
+	// shared trie nodes. Shorter keys first ensures base groups (e.g. "shadow")
+	// register their specific validators before derived groups (e.g.
+	// "shadow-color") register catch-all validators. This matches the JS
+	// reference implementation which relies on object insertion order.
+	keys := make([]string, 0, len(config.ClassGroups))
+	for k := range config.ClassGroups {
+		keys = append(keys, k)
+	}
+	sort.Slice(keys, func(i, j int) bool {
+		if len(keys[i]) != len(keys[j]) {
+			return len(keys[i]) < len(keys[j])
+		}
+		return keys[i] < keys[j]
+	})
+
+	for _, classGroupID := range keys {
+		processClassesRecursively(config.ClassGroups[classGroupID], classMap, classGroupID, config.Theme)
 	}
 
 	return classMap

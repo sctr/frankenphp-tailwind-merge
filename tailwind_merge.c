@@ -63,7 +63,7 @@ zend_module_entry ext_module_entry = {
     STANDARD_MODULE_PROPERTIES
 };
 
-PHPAPI int register_internal_extensions(void) {
+static int tailwind_merge_register_internal_extensions(void) {
     if (original_php_register_internal_extensions_func != NULL &&
         original_php_register_internal_extensions_func() != SUCCESS) {
         return FAILURE;
@@ -80,5 +80,5 @@ PHPAPI int register_internal_extensions(void) {
 void register_extension() {
     original_php_register_internal_extensions_func =
         php_register_internal_extensions_func;
-    php_register_internal_extensions_func = register_internal_extensions;
+    php_register_internal_extensions_func = tailwind_merge_register_internal_extensions;
 }
