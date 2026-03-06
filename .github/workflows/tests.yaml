@@ -59,6 +59,13 @@ jobs:
           sudo ln -sf "$PHP_LIB" /usr/lib/x86_64-linux-gnu/libphp.so
           sudo ldconfig
 
+      - name: Run CGO compilation tests
+        run: |
+          CGO_ENABLED=1 \
+          CGO_CFLAGS="$(php-config --includes)" \
+          CGO_LDFLAGS="$(php-config --ldflags) $(php-config --libs)" \
+          go test -v -count=1 -run TestMemrchr .
+
       - name: Build FrankenPHP with tailwind_merge
         run: |
           go install github.com/caddyserver/xcaddy/cmd/xcaddy@latest
