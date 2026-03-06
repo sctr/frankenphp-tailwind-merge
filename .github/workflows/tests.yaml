@@ -59,6 +59,22 @@ jobs:
           sudo ln -sf "$PHP_LIB" /usr/lib/x86_64-linux-gnu/libphp.so
           sudo ldconfig
 
+      - name: Verify _GNU_SOURCE resolves memrchr
+        run: |
+          cat > /tmp/test_memrchr.c <<'CEOF'
+          #define _GNU_SOURCE
+          #include <string.h>
+          #include <php.h>
+          int main(void) {
+              const char *s = "hello";
+              /* memrchr is used by zend_operators.h — compilation fails
+                 without _GNU_SOURCE on glibc systems. */
+              return memrchr(s, 'l', 5) == (void*)0;
+          }
+          CEOF
+          cc $(php-config --includes) -fsyntax-only /tmp/test_memrchr.c
+          echo "memrchr compilation check passed"
+
       - name: Build FrankenPHP with tailwind_merge
         run: |
           go install github.com/caddyserver/xcaddy/cmd/xcaddy@latest

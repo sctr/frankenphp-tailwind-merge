@@ -1,7 +1,8 @@
 package tailwindmerge
 
-//#include <zend.h>
-//#include "tailwind_merge.h"
+// #cgo CFLAGS: -D_GNU_SOURCE
+// #include <zend.h>
+// #include "tailwind_merge.h"
 import "C"
 import (
 	"unsafe"
